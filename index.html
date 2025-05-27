@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>poolparty en el paraíso</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        #backgroundVideo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 999;
+            mix-blend-mode: multiply;
+        }
+        #video {
+            display: none;
+        }
+        #canvas {
+            width: 110%;
+            height: 110%;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0.7;
+            filter: blur(60px);
+        }
+        #textOverlay {
+            position: absolute;
+            text-align: center;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 2.5em;
+            z-index: 998;
+            mix-blend-mode: color-dodge;
+            filter: blur(3px);
+        }
+        .highlight {
+            font-size: 2em;
+            filter: blur(1px);
+
+
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+<link rel="icon" href="https://cdn.glitch.global/78041edb-888f-49f7-b4db-b777f5a6b17b/poolparteeey.png?v=1722951871001" type="image/png">
+
+  </head>
+<body>
+    <video id="backgroundVideo" autoplay muted loop>
+        <source src="https://cdn.glitch.me/78041edb-888f-49f7-b4db-b777f5a6b17b/9507847-uhd_4096_2160_30fps.mp4?v=1721337631997" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <video id="video" autoplay></video>
+    <canvas id="canvas"></canvas>
+    <div id="textOverlay">
+        <div id="text1">el futuro nunca llegó</div>
+        <div id="text2" class="hidden highlight">𓇢𓆸</div>
+        <div id="text3" class="hidden">future is over</div>
+        <div id="text4" class="hidden highlight">𓇢𓆸</div>
+
+    </div>
+
+    <script>
+        async function startCamera() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const textOverlay = document.getElementById('textOverlay');
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                video.play();
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                return;
+            }
+
+            video.addEventListener('loadedmetadata', () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                processFrame();
+            });
+
+            function processFrame() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+
+                ctx.scale(-1, 1);
+                ctx.translate(-canvas.width, 0);
+
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+
+                    data[i] = 255 - r;
+                    data[i + 1] = 255 - g;
+                    data[i + 2] = 255 - b;
+                }
+
+                for (let i = 0; i < data.length; i += 4) {
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    const avg = (r + g + b) / 3;
+                    const threshold = 120;
+
+                    const color = avg > threshold ? 0 : 255;
+
+                    data[i] = color;
+                    data[i + 1] = color;
+                    data[i + 2] = color;
+                }
+
+                ctx.putImageData(imageData, 0, 0);
+                ctx.restore();
+                requestAnimationFrame(processFrame);
+            }
+
+            function updateText() {
+                const texts = [
+                    document.getElementById('text1'),
+                    document.getElementById('text2'),
+                    document.getElementById('text3'),
+                    document.getElementById('text4')
+
+                ];
+                let index = 0;
+                setInterval(() => {
+                    texts.forEach((text, i) => {
+                        text.classList.toggle('hidden', i !== index);
+                    });
+                    index = (index + 1) % texts.length;
+                }, 5000);
+            }
+
+            updateText();
+        }
+
+        startCamera();
+    </script>
+</body>
+</html>
